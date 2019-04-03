@@ -38,7 +38,9 @@ jThree.MMD.kinect = {
         var bones = this.bones = this.mmd.children[ 0 ].bones;
         this.kinectBoneList = kinectBoneList;
         this.startJoints = startJoints;
-        // bone <-> kinect index 変換表作成
+        // kinectBoneList在初始化的时候，只设置了每个数组元素的name, child属性
+        // 这为它再设置index属性，表示这个Kinect关节点对应的mmd模型中的关节点
+        // 的索引，后续要通过这个索引去获取bones[index]结构体
         $.each( this.kinectBoneList,function(key,val){
             bones.forEach(function(bone,idx){
                 if(bone.name===val.name){
@@ -56,24 +58,43 @@ jThree.MMD.kinect = {
         var bones = this.bones;
         var list = this.kinectBoneList;
 
-        //对模型进行缩放，值越大，看起来越小
-        vec.copy(data.SpineBase).multiplyScalar(5);
-        // 左手系 <-> 右手系変換
-        vec.z=-vec.z;
-        mmd.localToWorld(vec);
-        bones[ 0 ].parent.updateMatrixWorld();
-        bones[ 0 ].parent.worldToLocal( vec);
-        bones[ 0 ].position.copy(vec);
-
-        // 立方体の位置をキネクトにあわせる
-        var n=0;
-        $.each(data, function(key, val) {
-            //对模型进行缩放，值越大，看起来越小
-            vec.copy(this).multiplyScalar(5);
+        // 这一坨代码主要就是调整骨骼的“中心点”，控制整个模型
+        //
+        // SpinBase是Kinect中骨骼中心点
+        // bones[0].name="センター"，中文就是“中心点”
+        //
+        // 把Kinect中心的坐标，作为mmd中的模型坐标，先转换到世界坐标
+        // 再转换到bones[0].parent的局部坐标中
+        //
+        // 最终只影响到bones[0].position，即模型在世界坐标中的位置，并
+        // 没有旋转
+        {
+            // 对模型进行缩放，值越大，看起来越小
+            vec.copy(data.SpineBase).multiplyScalar(5);
             // 左手系 <-> 右手系変換
-            vec.z=-vec.z;
+            vec.z = -vec.z;
             mmd.localToWorld(vec);
-        });
+            bones[0].parent.updateMatrixWorld();
+            bones[0].parent.worldToLocal(vec);
+            bones[0].position.copy(vec);
+        }
+
+        // 这一坨代码其实是没有用的，注释掉也能正常运行
+        //
+        // localToWorld只是将vec从mmd的模型坐标转换成世界坐标，并没有
+        // 其它地方使用这个vec变量
+        {
+            // 立方体の位置をキネクトにあわせる
+            // 将立方体的位置与Kinect对齐
+            var n = 0;
+            $.each(data, function(key, val) {
+                // 对模型进行缩放，值越大，看起来越小
+                vec.copy(this).multiplyScalar(5);
+                // 左手系 <-> 右手系変換
+                vec.z = -vec.z;
+                mmd.localToWorld(vec);
+            });
+        }
 
         this.startJoints.forEach(function(key,idx){
 
