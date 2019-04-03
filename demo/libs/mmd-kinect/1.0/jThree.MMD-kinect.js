@@ -56,7 +56,8 @@ jThree.MMD.kinect = {
         var bones = this.bones;
         var list = this.kinectBoneList;
 
-        vec.copy(data.SpineBase).multiplyScalar(13);
+        //对模型进行缩放，值越大，看起来越小
+        vec.copy(data.SpineBase).multiplyScalar(5);
         // 左手系 <-> 右手系変換
         vec.z=-vec.z;
         mmd.localToWorld(vec);
@@ -66,9 +67,9 @@ jThree.MMD.kinect = {
 
         // 立方体の位置をキネクトにあわせる
         var n=0;
-        $.each(data,function(key,val){
-            //red
-            vec.copy(this).multiplyScalar(13);
+        $.each(data, function(key, val) {
+            //对模型进行缩放，值越大，看起来越小
+            vec.copy(this).multiplyScalar(5);
             // 左手系 <-> 右手系変換
             vec.z=-vec.z;
             mmd.localToWorld(vec);
