@@ -33,24 +33,24 @@
  */
 
 jThree.MMD.kinect = {
-    init:function(mmd,kinectBoneList,startJoints){
+    init: function(mmd, kinectBoneList, startJoints) {
         this.mmd = mmd.three(0);
-        var bones = this.bones = this.mmd.children[ 0 ].bones;
+        var bones = this.bones = this.mmd.children[0].bones;
         this.kinectBoneList = kinectBoneList;
         this.startJoints = startJoints;
         // kinectBoneList在初始化的时候，只设置了每个数组元素的name, child属性
         // 这为它再设置index属性，表示这个Kinect关节点对应的mmd模型中的关节点
         // 的索引，后续要通过这个索引去获取bones[index]结构体
-        $.each( this.kinectBoneList,function(key,val){
-            bones.forEach(function(bone,idx){
-                if(bone.name===val.name){
-                    val.index=idx;
+        $.each(this.kinectBoneList, function(key, val) {
+            bones.forEach(function(bone, idx) {
+                if (bone.name === val.name) {
+                    val.index = idx;
                     return false;
                 }
             });
         });
     },
-    pose:function(kinectData){
+    pose: function(kinectData) {
         var vec = new THREE.Vector3();
         var vec2 = new THREE.Vector3();
         var data = kinectData;
@@ -96,64 +96,73 @@ jThree.MMD.kinect = {
             });
         }
 
-        this.startJoints.forEach(function(key,idx){
-
+        // 遍历5个关节段
+        this.startJoints.forEach(function(key, idx) {
             var bone;
             var child;
+            
+            // 这一行可以控制只处理某一个关节段，比如右上肢，其它部位不变
+            //if (!(idx == 1))
+            //    return;
+                
+            while (list[key].child) {
+                bone = bones[list[key].index];                   // mmd骨骼信息
+                bone_child = bones[list[list[key].child].index]; // mmd骨骼子节点信息
+                child = data[list[key].child];                   // Kinect子节点坐标
 
-            while ( list[key].child ) {
-                bone = bones[list[key].index];
-                child = data[list[key].child];
-
-                // Kinect座標データを取得、右手系、親ボーンのローカル座標に変換してから、差分を取得
+                // Kinect子节点坐标，左右手坐标系转换，转换到模型坐标上
                 vec.copy(child);
-                vec.z=-vec.z;
+                vec.z = -vec.z;
                 bone.parent.worldToLocal(vec);
+
+                // Kinect当前坐标，左右手坐标系转换，转换到模型坐标上
                 vec2.copy(data[key]);
-                vec2.z=-vec2.z;
+                vec2.z = -vec2.z;
                 bone.parent.worldToLocal(vec2);
-                vec.subVectors( vec,vec2);
 
-                // モデル側 子ボーンの定義
-                var bone_child = bones[list[list[key].child].index];
-                // 法線ベクトルの定義
+                // 子节点-当前节点的坐标，得到两个向量的差
+                vec.subVectors(vec, vec2);
+
+                // 定义法向量
                 var vecVertical = new THREE.Vector3();
-                // 代入用のボーンベクトルの定義
-                var boneVector = new THREE.Vector3();
-                boneVector.copy( bone_child.position );
 
-                // 各ベクトルの正規化
+                // 定义骨骼矢量以进行替换
+                var boneVector = new THREE.Vector3();
+                boneVector.copy(bone_child.position);
+
+                // 规范化每个向量
                 boneVector.normalize();
                 vec.normalize();
 
-                // ボーンのクォータニオンを求める。 参照：http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
-                // ベクトルの内積により回転要素を算出
-                var r = boneVector.dot( vec ) + 1;
-                if(r < 0.000001) {
-                    // 内積が0の誤差範囲の場合、法線はz軸かx軸に垂直である とする
+                // 求骨骼的四元数。
+                // 参照：http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
+                // 通过两个向量的内积计算两个向量的夹角
+                var r = boneVector.dot(vec) + 1;
+                if (r < 0.000001) {
+                    // 如果内积在误差范围0内，则假定法线垂直于z轴或x轴
                     r = 0;
-                    if ( Math.abs( boneVector.x ) > Math.abs( boneVector.z ) ) {
-                        v1.set( - boneVector.y, boneVector.x, 0 );
+                    if (Math.abs(boneVector.x) > Math.abs(boneVector.z)) {
+                        v1.set(-boneVector.y, boneVector.x, 0);
                     } else {
-                        v1.set( 0, - boneVector.z, boneVector.y );
+                        v1.set(0, -boneVector.z, boneVector.y);
                     }
                 } else {
-                    // Kinectの差分から算出したボーン目標ベクトルと元ボーンの法線を算出
-                    vecVertical.crossVectors(boneVector, vec );
+                    // 计算根据Kinect差异和原始骨骼法线计算的骨骼目标向量
+                    vecVertical.crossVectors(boneVector, vec);
                 }
 
-                // クォータニオンに法線ベクトルと回転を代入
-                bone.quaternion.set(vecVertical.x, vecVertical.y, vecVertical.z,r);
-                // クォータニオンを正規化
+                // 将法线向量和旋转角度指定给四元数
+                bone.quaternion.set(vecVertical.x, vecVertical.y, vecVertical.z, r);
+
+                // 规范化四元数
                 bone.quaternion.normalize();
 
-                // ボーンのマトリクスをワールド座標に反映
+                // 在世界坐标中反映骨骼矩阵
                 bone.parent.updateMatrixWorld(true);
 
+                // 继续处理子节点
                 key = list[key].child;
             }
         });
-
-
     }
 };
