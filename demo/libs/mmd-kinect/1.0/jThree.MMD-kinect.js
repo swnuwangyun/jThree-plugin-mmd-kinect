@@ -100,23 +100,24 @@ jThree.MMD.kinect = {
         this.startJoints.forEach(function(key, idx) {
             var bone;
             var child;
-            
+
             // 这一行可以控制只处理某一个关节段，比如右上肢，其它部位不变
             //if (!(idx == 1))
             //    return;
-                
+
             while (list[key].child) {
                 bone = bones[list[key].index];                   // mmd骨骼信息
                 bone_child = bones[list[list[key].child].index]; // mmd骨骼子节点信息
-                child = data[list[key].child];                   // Kinect子节点坐标
+                kbone_pos = data[key];                           // Kinect节点坐标
+                kbone_child_pos = data[list[key].child];         // Kinect子节点坐标
 
                 // Kinect子节点坐标，左右手坐标系转换，转换到模型坐标上
-                vec.copy(child);
+                vec.copy(kbone_child_pos);
                 vec.z = -vec.z;
                 bone.parent.worldToLocal(vec);
 
                 // Kinect当前坐标，左右手坐标系转换，转换到模型坐标上
-                vec2.copy(data[key]);
+                vec2.copy(kbone_pos);
                 vec2.z = -vec2.z;
                 bone.parent.worldToLocal(vec2);
 
