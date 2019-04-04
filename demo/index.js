@@ -12,7 +12,7 @@ jThree( function( j3 ) {
     var i = 0;
     j3.update(function(d){
         if(i >= len) i=0;
-        j3.mmd.kinect.pose(kinect[i].bodyinfo);
+        j3.mmd.kinect.pose(kinect[0].bodyinfo);
         i++;
     });
 },
