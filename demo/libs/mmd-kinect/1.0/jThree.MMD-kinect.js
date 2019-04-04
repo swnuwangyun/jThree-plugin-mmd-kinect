@@ -127,7 +127,7 @@ jThree.MMD.kinect = {
                 // 定义法向量
                 var vecVertical = new THREE.Vector3();
 
-                // 定义骨骼矢量以进行替换
+                // 定义骨骼矢量以进行替换, .position是相对于父节点坐标系的相对坐标
                 var boneVector = new THREE.Vector3();
                 boneVector.copy(bone_child.position);
 
