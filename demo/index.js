@@ -12,7 +12,7 @@ jThree( function( j3 ) {
     var i = 0;
     j3.update(function(d){
         if(i >= len) i=0;
-        j3.mmd.kinect.pose(kinect[0].bodyinfo);
+        j3.mmd.kinect.pose(kinect[i].bodyinfo);
         i++;
     });
 },
@@ -63,6 +63,14 @@ var list = {
     HandRight: {
         name: "左中指１"
     },
+
+
+
+
+
+
+    // js自带的模型映射关系
+    /*
     HipLeft: {
         name: "右足",
         child: "KneeLeft"
@@ -92,7 +100,44 @@ var list = {
     },
     FootRight: {
         name: "左つま先"
+    }*/
+    
+    
+    
+    // mmp中的模型映射关系
+    HipLeft: {
+    name: "腰キャンセル右",
+    child: "KneeLeft"
+    },
+    KneeLeft: {
+    name: "右ひざD",
+    child: "AnkleLeft"
+    },
+    AnkleLeft: {
+    name: "右足首D",
+    child: "FootLeft"
+    },
+    FootLeft: {
+    name: "右足先EX"
+    },
+    HipRight: {
+    name: "腰キャンセル左",
+    child: "KneeRight"
+    },
+    KneeRight: {
+    name: "左ひざD",
+    child: "AnkleRight"
+    },
+    AnkleRight: {
+    name: "左足首D",
+    child: "FootRight"
+    },
+    FootRight: {
+    name: "左足先EX"
     }
+    
+    
+    
     /*
     SpineShoulder:
     HandTipLeft:
